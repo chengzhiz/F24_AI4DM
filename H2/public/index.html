@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM of Truth</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>LLM of Truth</h1>
+
+  <!-- Input box for the question -->
+  <input type="text" id="questionInput" placeholder="Enter your yes/no question" style="width: 300px;">
+
+  <!-- Button to submit the question -->
+  <button id="submitBtn">Get Magic Answer</button>
+
+  <!-- Area to display the result -->
+  <div id="result"></div>
+
+  <body>
+    1. **Personal or Contextual Information:** LLMs don’t know personal details about you or your life, so they can’t
+    give advice based on your specific situation.<br>
+
+    2. **Personal Opinions:** LLMs don’t have personal feelings or opinions, so they can’t answer questions about what
+    someone might like or prefer.<br>
+
+    3. **Predicting the Future:** LLMs can’t predict the future. They only know things that have already happened, so
+    they can’t tell you what will happen later.<br>
+
+    4. **Deep Personal Issues:** LLMs aren’t able to help with very personal problems. These kinds of questions need a
+    deep understanding of emotions, which LLMs don’t have.<br>
+
+    5. **Medical or Legal Advice:** LLMs shouldn’t be used for advice on health or legal issues. You should talk to a
+    doctor or lawyer for these kinds of questions.<br>
+
+    6. **Questions Using Senses:** LLMs can only understand text, not things you can see, hear, or feel. They can’t
+    answer questions that need sensory information like sounds or images.<br>
+
+    7. **Emotions or Relationships:** LLMs don’t understand human emotions or relationships well. They can’t help with
+    questions about feelings or personal connections.<br>
+
+    8. **Art or Literature Interpretation:** LLMs don’t have personal insight, so they can’t really interpret art or
+    literature in a deep, emotional way like people can.<br>
+
+    9. **Speculative or Theoretical Questions:** LLMs can’t answer questions about things that haven’t been proven yet
+    or are just theories. They stick to facts that are known.<br>
+
+    10. **General Knowledge and Fact-Checking:** LLMs are really good at answering general knowledge questions and
+    checking facts, as long as the information is something they have learned before. They’re great for questions about
+    history, science, and technical details.</body>
+
+  <script>
+    // Function to check if the question is answerable
+    async function checkQuestionAnswerability(question) {
+      const yesNoCheck = isYesNoQuestion(question);
+      if (!yesNoCheck) {
+        return { answerable: false, reason: "None" };
+      }
+
+      // Check for unanswerable reasons
+      const unanswerableReason = getUnanswerableReason(question);
+      if (unanswerableReason) {
+        return { answerable: false, reason: unanswerableReason };
+      }
+
+      // Call OpenAI API if the question is yes/no and there's no unanswerable reason
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer APIKEY` // Replace with your OpenAI API key
+          },
+          body: JSON.stringify({
+            model: 'gpt-3.5-turbo', // or gpt-4
+            messages: [{ role: 'user', content: question }],
+            max_tokens: 100
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Check if we got a valid response back
+        if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+          return { answerable: true, reason: "General Knowledge and Fact Verification: LLMs are highly effective at answering general knowledge, fact-checking, and basic logic questions." };
+        } else {
+          return { answerable: false, reason: "The model did not return a valid response." };
+        }
+
+      } catch (error) {
+        return { answerable: false, reason: `Error occurred: ${error.message}` };
+      }
+    }
+
+    // Function to determine if a question is a yes/no question
+    function isYesNoQuestion(question) {
+      const yesNoWords = ["is", "are", "do", "does", "can", "will", "should", "am"];
+      const lowerQuestion = question.toLowerCase();
+
+      // Check if the question starts with a yes/no word
+      return yesNoWords.some(word => lowerQuestion.startsWith(word));
+    }
+
+    // Function to determine unanswerable reasons
+    function getUnanswerableReason(question) {
+      const lowerQuestion = question.toLowerCase();
+
+      // 1. Requiring Personal or Contextual Information About the User
+      if (lowerQuestion.includes("am i") || lowerQuestion.includes("do i") || lowerQuestion.includes("my") || lowerQuestion.includes("me")) {
+        return "Requiring Personal or Contextual Information About the User: LLMs lack personal context and cannot provide personalized advice, as they are unaware of individual circumstances, preferences, or experiences.";
+      }
+
+      // 2. Highly Subjective Questions / Personal Opinions
+      if (lowerQuestion.includes("opinion") || lowerQuestion.includes("should i") || lowerQuestion.includes("what do you think")) {
+        return "Highly Subjective Questions / Personal Opinions: LLMs do not possess personal opinions or subjective preferences, making them unsuitable for answering questions that depend on individual taste or judgment.";
+      }
+
+      // 3. Exact Predictions
+      if (lowerQuestion.includes("predict") || lowerQuestion.includes("forecast") || lowerQuestion.includes("will happen")) {
+        return "Exact Predictions: LLMs are incapable of making accurate future predictions, as their responses are based on historical data and do not foresee future events or outcomes.";
+      }
+
+      // 4. Deeply Personal Issues
+      if (lowerQuestion.includes("relationship") || lowerQuestion.includes("love") || lowerQuestion.includes("emotional")) {
+        return "Deeply Personal Issues: LLMs are not equipped to handle deeply personal matters, as such questions require nuanced understanding and emotional intelligence, which are beyond the scope of LLMs.";
+      }
+
+      // 5. Medical or Legal Advice
+      if (lowerQuestion.includes("diagnose") || lowerQuestion.includes("cure") || lowerQuestion.includes("legal") || lowerQuestion.includes("law")) {
+        return "Medical or Legal Advice: LLMs should not be used for specific medical or legal advice, as they provide only general information and cannot replace professional opinions in these fields.";
+      }
+
+      // 6. Sensory Input-Based Question
+      if (lowerQuestion.includes("hear") || lowerQuestion.includes("see") || lowerQuestion.includes("smell")) {
+        return "Sensory Input-Based Question: LLMs operate solely on text-based information and lack the capability to process sensory inputs like sound or vision, making them unable to respond accurately to questions that require such inputs.";
+      }
+
+      // 7. Questions Involving Human Emotions or Relationships
+      if (lowerQuestion.includes("emotion") || lowerQuestion.includes("feeling") || lowerQuestion.includes("relationship")) {
+        return "Questions Involving Human Emotions or Relationships: LLMs lack the ability to understand or interpret human emotions and relationships in a nuanced way. Questions about personal relationships and emotions require empathy and an understanding of human psychology, which are beyond the capabilities of LLMs.";
+      }
+
+      // 8. Interpretation of Art or Literature
+      if (lowerQuestion.includes("interpret") || lowerQuestion.includes("art") || lowerQuestion.includes("literature")) {
+        return "Interpretation of Art or Literature: Speculative or theoretical questions that delve into areas not yet confirmed by science or research are beyond the scope of LLMs. These models rely on established knowledge and cannot provide definitive answers on speculative topics.";
+      }
+
+      // 9. Speculative or Theoretical Queries
+      if (lowerQuestion.includes("theory") || lowerQuestion.includes("hypothesis") || lowerQuestion.includes("speculate")) {
+        return "Speculative or Theoretical Queries: Speculative or theoretical questions that delve into areas not yet confirmed by science or research are beyond the scope of LLMs. These models rely on established knowledge and cannot provide definitive answers on speculative topics.";
+      }
+
+      // Return null if no unanswerable reason matches
+      return null;
+    }
+
+    // Event listener for the button click
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      const question = document.getElementById('questionInput').value;
+      const result = await checkQuestionAnswerability(question);
+
+      // Display the result in the 'result' div
+      document.getElementById('result').textContent = result.answerable
+        ? `Yes - ${result.reason}`
+        : `No - ${result.reason}`;
+    });
+  </script>
+
+
+</body>
+
+</html>
