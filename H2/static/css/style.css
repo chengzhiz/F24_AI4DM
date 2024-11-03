@@ -1,0 +1,88 @@
+/* General body styling for a modern cyber look */
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: #f4f4f4;
+    /* Light gray background for readability */
+    color: #333333;
+    /* Dark text color for contrast */
+}
+
+/* Monospaced font for headings with a cyber look */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Roboto Mono', monospace;
+    /* Futuristic monospaced font */
+    color: #222222;
+    /* Slightly darker heading color */
+    letter-spacing: 0.05em;
+    /* Subtle spacing for a clean look */
+    text-transform: uppercase;
+    /* Adds structure to headings */
+    border-bottom: 2px solid #cccccc;
+    /* Underline effect */
+    padding-bottom: 0.2em;
+}
+
+/* Paragraph and card text styling */
+p,
+.card-text,
+.list-group-item {
+    font-family: 'Roboto', Arial, sans-serif;
+    /* Standard sans-serif for readability */
+    color: #444444;
+    /* Soft gray for text */
+    line-height: 1.6;
+}
+
+/* Styling for the card container */
+.card {
+    background-color: #ffffff;
+    /* White background for clean contrast */
+    border: 1px solid #dddddd;
+    /* Subtle gray border */
+    border-radius: 6px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    /* Light shadow for depth */
+}
+
+/* Card titles */
+.card-title {
+    font-family: 'Roboto Mono', monospace;
+    color: #333333;
+    /* Darker gray for the card title */
+    font-weight: bold;
+}
+
+/* Subtitle styling */
+.card-subtitle {
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #666666;
+    /* Medium gray for subtler text */
+    font-size: 0.9em;
+    /* Slightly smaller text size */
+}
+
+/* List item styling */
+.list-group-item {
+    background-color: #f9f9f9;
+    /* Light gray for easy contrast */
+    color: #555555;
+    border: none;
+}
+
+/* Button styling for any buttons (if needed) */
+button,
+.btn {
+    font-family: 'Roboto Mono', monospace;
+    background-color: #444444;
+    /* Dark gray background */
+    color: #f4f4f4;
+    /* Light text color */
+    border: none;
+    padding: 0.5em 1em;
+    text-transform: uppercase;
+}

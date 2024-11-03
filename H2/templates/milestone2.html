@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <br>
+  <div class="row justify-content-center">
+    <!-- First Card -->
+    <div class="col-md-4">
+      <div class="card text-left mb-3" style="width: 100%;">
+        <div class="card-body">
+          <h5 class="card-title">Question Generator</h5>
+          <p class="card-text">Please hit the button for generating a yes/no question using Google Flan-t5-large</p>
+          <h6 class="card-title">Question Type</h6>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="questionType" id="flexRadioDefault1" value="Child"
+              onclick="resetQuestion()">
+            <label class="form-check-label" for="flexRadioDefault1">
+              Child
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="questionType" id="flexRadioDefault2" value="Mom" checked
+              onclick="resetQuestion()">
+            <label class="form-check-label" for="flexRadioDefault2">
+              Mom
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="questionType" id="flexRadioDefault3" value="Dad"
+              onclick="resetQuestion()">
+            <label class="form-check-label" for="flexRadioDefault3">
+              Dad
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="questionType" id="flexRadioDefault4" value="Student"
+              onclick="resetQuestion()">
+            <label class="form-check-label" for="flexRadioDefault4">
+              Student
+            </label>
+          </div>
+          <a href="#" class="btn btn-primary" onclick="generateQuestion()">Generate</a>
+          <p class="card-text" id="question">
+            {{ question }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Card -->
+    <div class="col-md-6">
+      <div class="card text-left mb-3" style="width: 100%;">
+        <div class="card-body">
+          <h5 class="card-title">Ask Chatbot of Truth</h5>
+          <p class="card-text">Get the answer!</p>
+          <a href="#" class="btn btn-primary" onclick="askChatGPT()">Ask</a>
+          <p class="card-text"><strong>Answer:</strong> <span id="answer">{{ answer }}</span></p>
+          <p class="card-text"><strong>Category:</strong> <span id="category_name">{{ category_name }}</span></p>
+          <p class="card-text"><strong>Justification:</strong> <span id="justification">{{ justification }}</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to reset the question text when a radio button is clicked
+  function resetQuestion() {
+    document.getElementById('question').innerText = "waiting"; // Reset to "waiting"
+  }
+
+  // JavaScript function to fetch a new question from the server
+  // JavaScript function to fetch a new question from the server
+  function generateQuestion() {
+    // Get the value of the selected radio button
+    const userType = document.querySelector('input[name="questionType"]:checked').value;
+
+    // Send the userType as a parameter in the GET request
+    fetch(`/generate-question2?questionType=${userType}`, {  // Updated endpoint to include userType
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        // Update the question text with the generated question
+        document.getElementById('question').innerText = data.question;
+        // Clear any previous answer, category, and justification
+        document.getElementById('answer').innerText = "";
+        document.getElementById('category_name').innerText = "";
+        document.getElementById('justification').innerText = "";
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // JavaScript function to call ask_chatgpt with the text from id="question" and display its response
+  function askChatGPT() {
+    // Get the text from the "question" element
+    const userQuestion = document.getElementById('question').innerText;
+
+    // Send the question as user_input to the server
+    fetch('/ask-chatgpt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ question: userQuestion })  // Send the 'question'
+    })
+      .then(response => response.json())
+      .then(data => {
+        // Update the answer, category_name, and justification text with the response from ask_chatgpt
+        document.getElementById('answer').innerText = data.answer;
+        document.getElementById('category_name').innerText = data.category_name;
+        document.getElementById('justification').innerText = data.justification;
+      })
+      .catch(error => console.error('Error retrieving answer:', error));
+  }
+</script>
+
+{% endblock %}
