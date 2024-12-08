@@ -1,0 +1,160 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#artboardContainer {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+#toolbarSection {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 10px 0;
+    background: #f8f9fa;
+    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+    flex: 0 0 100px;
+    /* Fixed width for toolbar */
+}
+
+.tool-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tool {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    /* Smaller width */
+    height: 40px;
+    /* Smaller height */
+}
+
+.tool img {
+    width: 30px;
+    /* Smaller image size */
+    height: 30px;
+    /* Smaller image size */
+}
+
+.tool.active img {
+    border: 2px solid #5a67d8;
+    border-radius: 4px;
+}
+
+#artboard {
+    flex: 1;
+    display: block;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0;
+}
+
+#imageGenerationSection {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 10px;
+    background: #f8f9fa;
+    border-left: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+#imageGenerationSection .mb-3 {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#imageGenerationSection .input-group-lg {
+    width: 100%;
+}
+
+#generateImage {
+    margin-top: 10px;
+    /* Adds space between input box and the button */
+    width: 100%;
+    /* Makes the button the same width as the input */
+}
+
+#generatedImageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+#generatedImageContainer .placeholder-img {
+    width: 100%;
+    height: 200px;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    text-align: center;
+}
+
+#generatedImageContainer img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    visibility: hidden;
+    /* Hide by default until an image is generated */
+}
+
+
+canvas {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+}
+
+/* For purple buttons */
+.btn-purple {
+    background-color: #6a4c9c;
+    /* Purple color */
+    color: white;
+    border: none;
+}
+
+.btn-purple:hover {
+    background-color: #4e3582;
+    color: white;
+    /* Slightly darker purple on hover */
+}
+
+input.form-control {
+    width: 100%;
+    /* Make the input take up the full width of its container */
+}

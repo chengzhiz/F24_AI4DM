@@ -1,128 +1,231 @@
 {% extends "base.html" %}
-{%block content%}
-<!doctype html>
-<html lang="en">
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Artboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <style>
-    /* Full-page artboard container */
-    #artboardContainer {
-      display: flex;
-      height: 100vh;
-      position: relative;
-    }
-
-    /* Canvas for Drawing */
-    #artboard {
-      flex: 1;
-      background-color: #f8f9fa;
-      border: 1px solid #ddd;
-      cursor: crosshair;
-      height: 100%;
-    }
-
-    /* Image Generation Section on the Right */
-    #imageGenerationSection {
-      width: 300px;
-      background-color: white;
-      border-left: 1px solid #ddd;
-      padding: 20px;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-      position: relative;
-    }
-
-    #imageGenerationSection h2 {
-      font-size: 1.2rem;
-    }
-
-    #generatedImageContainer img {
-      width: 100%;
-      height: auto;
-    }
-
-    /* Form and Button styles */
-    .form-control {
-      margin-bottom: 10px;
-    }
-
-    .btn {
-      margin-top: 10px;
-    }
-  </style>
-</head>
-
-<body>
-
-  <!-- Main Artboard Container -->
-  <div id="artboardContainer">
-    <!-- Canvas for Drawing -->
-    <canvas id="artboard"></canvas>
-
-    <!-- Image Generation Section (always visible) -->
-    <div id="imageGenerationSection">
-      <h2>Generate Image</h2>
-      <div class="mb-3">
-        <label for="imagePrompt" class="form-label">Enter Text for Image Generation</label>
-        <input type="text" class="form-control" id="imagePrompt" placeholder="Describe your image...">
-      </div>
-      <button id="generateImage" class="btn btn-primary">Generate Image</button>
-      <div id="generatedImageContainer" class="text-center mt-3">
-        <!-- Generated image will appear here -->
-      </div>
+{% block content %}
+<div id="artboardContainer" class="row g-0">
+  <!-- Toolbox Section -->
+  <div id="toolbarSection" class="col-1">
+    <h5>Tools</h5>
+    <div class="tool-icons">
+      <button id="cursorTool" class="tool">
+        <img src="{{ url_for('static', filename='imgs/cursor.svg') }}" alt="Cursor" title="Cursor Tool">
+      </button>
+      <button id="penTool" class="tool active">
+        <img src="{{ url_for('static', filename='imgs/pen.svg') }}" alt="Pen" title="Pen Tool">
+      </button>
+      <button id="eraserTool" class="tool">
+        <img src="{{ url_for('static', filename='imgs/eraser.svg') }}" alt="Eraser" title="Eraser Tool">
+      </button>
+      <button id="textTool" class="tool">
+        <img src="{{ url_for('static', filename='imgs/text.svg') }}" alt="Text" title="Text Tool">
+      </button>
     </div>
   </div>
 
-  <!-- Include necessary JavaScript -->
-  <script>
-    // Canvas Drawing Logic
-    const canvas = document.getElementById("artboard");
-    const ctx = canvas.getContext("2d");
-    let drawing = false;
+  <!-- Canvas for Drawing -->
+  <div class="col">
+    <canvas id="artboard"></canvas>
+  </div>
 
-    // Set canvas size to full window minus the image generation section
-    canvas.width = window.innerWidth - 300;  // Subtracting width of image generation section
-    canvas.height = window.innerHeight;
+  <!-- Image Generation Section -->
+  <div id="imageGenerationSection" class="col">
+    <h5>Generate Image</h5>
 
-    // Get the canvas position relative to the window
-    const canvasRect = canvas.getBoundingClientRect();
+    <div class="mb-3 d-flex flex-column">
+      <!-- Input Group with the text box set to a large size -->
+      <div class="input-group input-group-lg mb-3">
+        <input type="text" class="form-control" id="imagePrompt" placeholder="Describe your image..."
+          aria-label="Image description">
+      </div>
 
-    // Start drawing when mouse is pressed
-    canvas.addEventListener("mousedown", () => {
-      drawing = true;
-    });
+      <!-- Button at the bottom -->
+      <button id="generateImage" class="btn btn-purple mt-2">Generate Image</button>
+    </div>
 
-    // Stop drawing when mouse is released
-    canvas.addEventListener("mouseup", () => {
-      drawing = false;
+    <!-- Image placeholder container -->
+    <div id="generatedImageContainer" class="text-center mt-3">
+      <div class="placeholder-img"
+        style="width: 100%; height: 200px; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; color: #888;">
+        <span>No Image Generated</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("artboard");
+  const ctx = canvas.getContext("2d");
+  const toolIcons = document.querySelectorAll(".tool");
+  let tool = "pen"; // Default tool
+
+  // Set up canvas size dynamically
+  canvas.width = window.innerWidth - 450; // Adjust to fit layout
+  canvas.height = window.innerHeight - 100;
+
+  let canvasRect = canvas.getBoundingClientRect();
+
+  document.getElementById("generateImage").addEventListener("click", function () {
+    const imageUrl = "path/to/generated-image.jpg"; // Replace with actual generated image URL
+
+    const imgElement = document.querySelector("#generatedImageContainer img");
+    const placeholder = document.querySelector("#generatedImageContainer .placeholder-img");
+
+    // Remove the placeholder and display the image
+    placeholder.style.display = "none";
+
+    if (imgElement) {
+      imgElement.src = imageUrl;
+      imgElement.style.visibility = "visible"; // Make the image visible
+    } else {
+      const newImg = document.createElement("img");
+      newImg.src = imageUrl;
+      newImg.style.visibility = "visible";
+      document.querySelector("#generatedImageContainer").appendChild(newImg);
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    canvasRect = canvas.getBoundingClientRect();
+  });
+
+  const drawings = []; // Store drawing paths
+  const memos = [];
+  let selectedMemo = null;
+  let offsetX = 0, offsetY = 0;
+  let resizing = false;
+  let drawing = false;
+
+  function getCanvasCoordinates(e) {
+    canvasRect = canvas.getBoundingClientRect(); // Update dynamically
+    const scaleX = canvas.width / canvasRect.width; // Horizontal scaling factor
+    const scaleY = canvas.height / canvasRect.height; // Vertical scaling factor
+    const x = (e.clientX - canvasRect.left) * scaleX;
+    const y = (e.clientY - canvasRect.top) * scaleY;
+    return { x, y };
+  }
+
+  // Draw everything
+  function drawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw all saved drawing paths
+    drawings.forEach(path => {
       ctx.beginPath();
+      ctx.strokeStyle = path.color;
+      ctx.lineWidth = path.size;
+      ctx.moveTo(path.points[0].x, path.points[0].y);
+      path.points.forEach(point => ctx.lineTo(point.x, point.y));
+      ctx.stroke();
     });
 
-    // Draw on the canvas
-    canvas.addEventListener("mousemove", (e) => {
-      if (drawing) {
-        // Adjust mouse coordinates relative to the canvas
-        const mouseX = e.clientX - canvasRect.left;
-        const mouseY = e.clientY - canvasRect.top;
+    // Draw all memos (always on top)
+    memos.forEach(drawMemo);
+  }
 
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "black";
+  function drawMemo(memo) {
+    // Draw memo background (orange)
+    ctx.fillStyle = "purple";
+    ctx.fillRect(memo.x, memo.y, memo.width, memo.height); // Background fill
 
-        ctx.lineTo(mouseX, mouseY);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(mouseX, mouseY);
+    // Draw memo text
+    ctx.fillStyle = "white";
+    ctx.font = `${memo.fontSize}px Arial`;
+    ctx.fillText(memo.text, memo.x + 10, memo.y + memo.fontSize + 5, memo.width - 20);
+
+    // Add resize handle (bottom-right corner)
+    ctx.fillStyle = "orange";
+    ctx.fillRect(memo.x + memo.width - 10, memo.y + memo.height - 10, 10, 10);
+  }
+  // Tool actions on canvas
+  canvas.addEventListener("mousedown", (e) => {
+    const { x, y } = getCanvasCoordinates(e);
+
+    if (tool === "pen") {
+      drawing = true;
+      drawings.push({ color: "purple", size: 2, points: [{ x, y }] });
+    } else if (tool === "eraser") {
+      drawing = true;
+    } else if (tool === "text") {
+      const text = prompt("Enter your text:");
+      if (text) {
+        memos.push({ x, y, width: 150, height: 50, text, fontSize: 16 });
+        drawCanvas();
       }
-    });
-  </script>
-</body>
+    } else if (tool === "cursor") {
+      selectedMemo = memos.find(memo =>
+        x >= memo.x &&
+        x <= memo.x + memo.width &&
+        y >= memo.y &&
+        y <= memo.y + memo.height
+      );
 
-</html>
+      if (selectedMemo) {
+        if (x >= selectedMemo.x + selectedMemo.width - 10 &&
+          y >= selectedMemo.y + selectedMemo.height - 10) {
+          resizing = true;
+        } else {
+          offsetX = x - selectedMemo.x;
+          offsetY = y - selectedMemo.y;
+        }
+      }
+    }
+  });
 
-{%endblock%}
+  canvas.addEventListener("mousemove", (e) => {
+    const { x, y } = getCanvasCoordinates(e);
+
+    if (drawing && tool === "pen") {
+      const currentPath = drawings[drawings.length - 1];
+      currentPath.points.push({ x, y });
+      drawCanvas();
+    } else if (drawing && tool === "eraser") {
+      // Iterate through each path and remove points in eraser's radius
+      drawings.forEach(path => {
+        const newPoints = [];
+        for (let i = 0; i < path.points.length; i++) {
+          const point = path.points[i];
+          const dx = point.x - x;
+          const dy = point.y - y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // If the point is outside the eraser's radius, keep it
+          if (distance > 10) {
+            newPoints.push(point);
+          } else {
+            // If the point is within the eraser's radius, remove it
+            // Optionally, split the path if needed, by adding conditions for specific cases
+          }
+        }
+        // Replace the path points with the remaining points
+        path.points = newPoints;
+      });
+      drawCanvas();
+    } else if (selectedMemo && resizing) {
+      selectedMemo.width = Math.max(50, x - selectedMemo.x);
+      selectedMemo.height = Math.max(30, y - selectedMemo.y);
+      drawCanvas();
+    } else if (selectedMemo) {
+      selectedMemo.x = x - offsetX;
+      selectedMemo.y = y - offsetY;
+      drawCanvas();
+    }
+  });
+
+
+  canvas.addEventListener("mouseup", () => {
+    drawing = false;
+    selectedMemo = null;
+    resizing = false;
+  });
+
+  // Toolbar functionality
+  document.getElementById("toolbarSection").addEventListener("click", (e) => {
+    const clickedTool = e.target.closest(".tool");
+    if (clickedTool) {
+      toolIcons.forEach(icon => icon.classList.remove("active"));
+      clickedTool.classList.add("active");
+      tool = clickedTool.id.replace("Tool", "").toLowerCase();
+    }
+  });
+</script>
+
+{% endblock %}
