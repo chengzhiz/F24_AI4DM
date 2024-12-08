@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <!-- Sign-Up Section -->
+    <div class="col-md-6 bg-light p-5">
+      <h2 class="text-center mb-4">Sign Up</h2>
+      <form action="/signup" method="POST">
+        <div class="mb-3">
+          <input type="text" class="form-control" name="username" placeholder="Username" required>
+        </div>
+        <div class="mb-3">
+          <input type="password" class="form-control" name="password" placeholder="Password" required>
+        </div>
+        <div class="mb-3">
+          <select class="form-select" name="role" required>
+            <option value="" disabled selected>Select Role</option>
+            <option value="client">Client</option>
+            <option value="designer">Designer</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+      </form>
+    </div>
+
+    <!-- Log-In Section -->
+    <div class="col-md-6 p-5">
+      <h2 class="text-center mb-4">Log In</h2>
+      <form action="/login" method="POST">
+        <div class="mb-3">
+          <input type="text" class="form-control" name="username" placeholder="Username" required>
+        </div>
+        <div class="mb-3">
+          <input type="password" class="form-control" name="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Log In</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

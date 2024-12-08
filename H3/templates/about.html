@@ -1,38 +1,10 @@
 {% extends "base.html" %}
-
 {%block content%}
 <div class="container">
   <div class="row">
     <div class="col-12">
-      <title>Sign Up and Log In</title>
-
-      <body>
-        <div class="container">
-          <!-- Sign Up Section -->
-          <div class="signup">
-            <h2>Sign Up</h2>
-            <form action="/signup" method="POST">
-              <input type="text" name="username" placeholder="Username" required>
-              <input type="password" name="password" placeholder="Password" required>
-              <select name="role" required>
-                <option value="" disabled selected>Select Role</option>
-                <option value="client">Client</option>
-                <option value="designer">Designer</option>
-              </select>
-              <button type="submit">Sign Up</button>
-            </form>
-          </div>
-          <!-- Log In Section -->
-          <div class="login">
-            <h2>Log In</h2>
-            <form action="/login" method="POST">
-              <input type="text" name="username" placeholder="Username" required>
-              <input type="password" name="password" placeholder="Password" required>
-              <button type="submit">Log In</button>
-            </form>
-          </div>
-        </div>
-      </body>
+      <h3>DreamLab</h3>
+      <p>DreamLab is a software</p>
     </div>
   </div>
 </div>

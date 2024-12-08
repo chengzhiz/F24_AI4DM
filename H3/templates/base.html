@@ -11,42 +11,49 @@
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
   <!-- Change the favicon based on the app -->
-  <link rel="icon" type="image/png" href="imgs/favicon.png">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='imgs/favicon.png') }}">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/addons/p5.sound.min.js"></script>
   <!-- If you are using ML5 this is where its imported -->
   <script src="https://unpkg.com/ml5@1/dist/ml5.js"></script>
 
-  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
-  <nav class="navbar navbar-expand-lg bg-body-tertiary bg-dark sticky-top" data-bs-theme="dark">
+  <nav class="navbar navbar-expand-lg sticky-top border-bottom">
     <div class="container-fluid">
+      <!-- Icon and Brand -->
+      <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+        <!-- Correct icon path using url_for -->
+        <img src="{{ url_for('static', filename='imgs/icon.png') }}" alt="Logo" width="120" height="30" class="me-2">
+      </a>
+      <!-- Toggle Button for Mobile View -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Navigation Links -->
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav nav-underline">
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link {% if active=='index' %}active {%endif %}" aria-current="page"
-              href="{{ url_for('index')}}">About</a>
+            <a class="nav-link {% if active=='artboard' %}active {%endif %}"
+              href="{{ url_for('artboard') }}">Artboard</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {% if active=='interaction_1' %}active {%endif %}"
-              href="{{ url_for('interaction_1')}}">Artboard</a>
+            <a class="nav-link {% if active=='about' %}active {%endif %}" href="{{ url_for('about') }}">About</a>
           </li>
-
-          <!-- add more pages to the Navbar here -->
-
+          <!-- Add more nav items here -->
         </ul>
       </div>
     </div>
   </nav>
 
-  {%block content%}
+  {% block content %}
+  {% endblock %}
 
-
-  {%endblock%}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
