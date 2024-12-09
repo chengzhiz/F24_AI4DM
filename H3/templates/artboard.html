@@ -3,7 +3,7 @@
 {% block content %}
 <div id="artboardContainer" class="row g-0">
   <!-- Toolbox Section -->
-  <div id="toolbarSection" class="col-1">
+  <div id="toolbarSection">
     <h5>Tools</h5>
     <div class="tool-icons">
       <button id="cursorTool" class="tool">
@@ -27,25 +27,31 @@
   </div>
 
   <!-- Image Generation Section -->
-  <div id="imageGenerationSection" class="col">
-    <h5>Generate Image</h5>
-
+  <div id="imageGenerationSection" class="col-3">
+    <h5>Image Generation</h5>
     <div class="mb-3 d-flex flex-column">
-      <!-- Input Group with the text box set to a large size -->
-      <div class="input-group input-group-lg mb-3">
-        <input type="text" class="form-control" id="imagePrompt" placeholder="Describe your image..."
-          aria-label="Image description">
-      </div>
+      <div method="POST">
+        <div class="mb-3">
 
-      <!-- Button at the bottom -->
-      <button id="generateImage" class="btn btn-purple mt-2">Generate Image</button>
+          <body>Text in prompt for image generation</body>
+        </div>
+        <div class="mb-3">
+          <input type="text" class="form-control" name="username" placeholder="Username" required>
+        </div>
+        <button type="submit" class="btn btn-purple w-100">Generate</button>
+      </div>
     </div>
 
-    <!-- Image placeholder container -->
-    <div id="generatedImageContainer" class="text-center mt-3">
+    <div id="generatedImageContainer" class="text-center mb-3">
       <div class="placeholder-img"
         style="width: 100%; height: 200px; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; color: #888;">
         <span>No Image Generated</span>
+      </div>
+    </div>
+
+    <div class="mb-3 d-flex flex-column">
+      <div class="mb-3">
+        <button type="submit" class="btn btn-purple w-100">Add Image</button>
       </div>
     </div>
   </div>
@@ -57,57 +63,34 @@
   const toolIcons = document.querySelectorAll(".tool");
   let tool = "pen"; // Default tool
 
-  // Set up canvas size dynamically
-  canvas.width = window.innerWidth - 450; // Adjust to fit layout
+  canvas.width = window.innerWidth - 450;
   canvas.height = window.innerHeight - 100;
-
   let canvasRect = canvas.getBoundingClientRect();
-
-  document.getElementById("generateImage").addEventListener("click", function () {
-    const imageUrl = "path/to/generated-image.jpg"; // Replace with actual generated image URL
-
-    const imgElement = document.querySelector("#generatedImageContainer img");
-    const placeholder = document.querySelector("#generatedImageContainer .placeholder-img");
-
-    // Remove the placeholder and display the image
-    placeholder.style.display = "none";
-
-    if (imgElement) {
-      imgElement.src = imageUrl;
-      imgElement.style.visibility = "visible"; // Make the image visible
-    } else {
-      const newImg = document.createElement("img");
-      newImg.src = imageUrl;
-      newImg.style.visibility = "visible";
-      document.querySelector("#generatedImageContainer").appendChild(newImg);
-    }
-  });
 
   window.addEventListener("resize", () => {
     canvasRect = canvas.getBoundingClientRect();
   });
 
-  const drawings = []; // Store drawing paths
+  const drawings = [];
   const memos = [];
-  let selectedMemo = null;
-  let offsetX = 0, offsetY = 0;
-  let resizing = false;
   let drawing = false;
+  let erasing = false;
+  let selectedMemo = null;
+  let resizingMemo = false;
+  let offsetX = 0;
+  let offsetY = 0;
 
   function getCanvasCoordinates(e) {
-    canvasRect = canvas.getBoundingClientRect(); // Update dynamically
-    const scaleX = canvas.width / canvasRect.width; // Horizontal scaling factor
-    const scaleY = canvas.height / canvasRect.height; // Vertical scaling factor
-    const x = (e.clientX - canvasRect.left) * scaleX;
-    const y = (e.clientY - canvasRect.top) * scaleY;
-    return { x, y };
+    const scaleX = canvas.width / canvasRect.width;
+    const scaleY = canvas.height / canvasRect.height;
+    return {
+      x: (e.clientX - canvasRect.left) * scaleX,
+      y: (e.clientY - canvasRect.top) * scaleY,
+    };
   }
 
-  // Draw everything
   function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw all saved drawing paths
     drawings.forEach(path => {
       ctx.beginPath();
       ctx.strokeStyle = path.color;
@@ -116,26 +99,35 @@
       path.points.forEach(point => ctx.lineTo(point.x, point.y));
       ctx.stroke();
     });
-
-    // Draw all memos (always on top)
     memos.forEach(drawMemo);
   }
 
   function drawMemo(memo) {
-    // Draw memo background (orange)
+    // Draw memo background
     ctx.fillStyle = "purple";
-    ctx.fillRect(memo.x, memo.y, memo.width, memo.height); // Background fill
-
+    ctx.fillRect(memo.x, memo.y, memo.width, memo.height);
     // Draw memo text
     ctx.fillStyle = "white";
     ctx.font = `${memo.fontSize}px Arial`;
     ctx.fillText(memo.text, memo.x + 10, memo.y + memo.fontSize + 5, memo.width - 20);
-
-    // Add resize handle (bottom-right corner)
+    // Draw resize handle
     ctx.fillStyle = "orange";
     ctx.fillRect(memo.x + memo.width - 10, memo.y + memo.height - 10, 10, 10);
   }
-  // Tool actions on canvas
+
+  function eraseDrawing(x, y) {
+    const eraseRadius = 10;
+    drawings.forEach(path => {
+      path.points = path.points.filter(point => {
+        const dx = point.x - x;
+        const dy = point.y - y;
+        return Math.sqrt(dx * dx + dy * dy) > eraseRadius;
+      });
+    });
+    drawings.filter(path => path.points.length > 0);
+    drawCanvas();
+  }
+
   canvas.addEventListener("mousedown", (e) => {
     const { x, y } = getCanvasCoordinates(e);
 
@@ -143,7 +135,8 @@
       drawing = true;
       drawings.push({ color: "purple", size: 2, points: [{ x, y }] });
     } else if (tool === "eraser") {
-      drawing = true;
+      erasing = true;
+      eraseDrawing(x, y);
     } else if (tool === "text") {
       const text = prompt("Enter your text:");
       if (text) {
@@ -152,16 +145,14 @@
       }
     } else if (tool === "cursor") {
       selectedMemo = memos.find(memo =>
-        x >= memo.x &&
-        x <= memo.x + memo.width &&
-        y >= memo.y &&
-        y <= memo.y + memo.height
+        x >= memo.x && x <= memo.x + memo.width &&
+        y >= memo.y && y <= memo.y + memo.height
       );
 
       if (selectedMemo) {
         if (x >= selectedMemo.x + selectedMemo.width - 10 &&
           y >= selectedMemo.y + selectedMemo.height - 10) {
-          resizing = true;
+          resizingMemo = true;
         } else {
           offsetX = x - selectedMemo.x;
           offsetY = y - selectedMemo.y;
@@ -177,47 +168,27 @@
       const currentPath = drawings[drawings.length - 1];
       currentPath.points.push({ x, y });
       drawCanvas();
-    } else if (drawing && tool === "eraser") {
-      // Iterate through each path and remove points in eraser's radius
-      drawings.forEach(path => {
-        const newPoints = [];
-        for (let i = 0; i < path.points.length; i++) {
-          const point = path.points[i];
-          const dx = point.x - x;
-          const dy = point.y - y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          // If the point is outside the eraser's radius, keep it
-          if (distance > 10) {
-            newPoints.push(point);
-          } else {
-            // If the point is within the eraser's radius, remove it
-            // Optionally, split the path if needed, by adding conditions for specific cases
-          }
-        }
-        // Replace the path points with the remaining points
-        path.points = newPoints;
-      });
-      drawCanvas();
-    } else if (selectedMemo && resizing) {
-      selectedMemo.width = Math.max(50, x - selectedMemo.x);
-      selectedMemo.height = Math.max(30, y - selectedMemo.y);
-      drawCanvas();
-    } else if (selectedMemo) {
-      selectedMemo.x = x - offsetX;
-      selectedMemo.y = y - offsetY;
+    } else if (erasing && tool === "eraser") {
+      eraseDrawing(x, y);
+    } else if (tool === "cursor" && selectedMemo) {
+      if (resizingMemo) {
+        selectedMemo.width = Math.max(50, x - selectedMemo.x);
+        selectedMemo.height = Math.max(30, y - selectedMemo.y);
+      } else {
+        selectedMemo.x = x - offsetX;
+        selectedMemo.y = y - offsetY;
+      }
       drawCanvas();
     }
   });
 
-
   canvas.addEventListener("mouseup", () => {
     drawing = false;
+    erasing = false;
     selectedMemo = null;
-    resizing = false;
+    resizingMemo = false;
   });
 
-  // Toolbar functionality
   document.getElementById("toolbarSection").addEventListener("click", (e) => {
     const clickedTool = e.target.closest(".tool");
     if (clickedTool) {
