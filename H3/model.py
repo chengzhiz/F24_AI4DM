@@ -1,40 +1,29 @@
-from transformers import pipeline
-from openai import OpenAI
-from dotenv import load_dotenv
-import json
-import random
-from datetime import datetime
-
-from langchain_openai import ChatOpenAI 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-load_dotenv()
-
 from huggingface_hub import InferenceClient
+from PIL import Image
+import os
 
-import requests
-from IPython.display import display
-
-client = InferenceClient("black-forest-labs/FLUX.1-dev", token="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")
+# Initialize Hugging Face client
+client = InferenceClient(model="black-forest-labs/FLUX.1-dev", token="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")
 
 def generate_image(prompt):
     """
     Generates an image based on the given prompt using the Hugging Face API.
 
     Args:
-        prompt (str): The prompt for the image generation.
+        prompt (str): The prompt for image generation.
 
     Returns:
-        str: The path to the saved image.
+        str: Path to the saved image.
     """
     try:
         if not prompt:
-            raise ValueError("Prompt is required.")
-        # Generate the image
+            raise ValueError("Prompt cannot be empty.")
+
+        # Generate image from Hugging Face API
         image = client.text_to_image(prompt)
-        image_path = 'static/generated_image.png'
+        image_path = "static/generated_image.png"
         image.save(image_path)
+
         return image_path
     except Exception as e:
-        raise RuntimeError(f"Error generating image: {e}")
+        raise RuntimeError(f"Image generation failed: {e}")

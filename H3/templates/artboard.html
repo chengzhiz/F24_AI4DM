@@ -30,18 +30,13 @@
   <div id="imageGenerationSection" class="col-3">
     <h5>Image Generation</h5>
     <div class="mb-3 d-flex flex-column">
-      <div method="POST">
-        <div class="mb-3">
-
-          <body>Text in prompt for image generation</body>
-        </div>
-        <div class="mb-3">
-          <input type="text" class="form-control" name="username" placeholder="Username" required>
-        </div>
-        <button type="submit" class="btn btn-purple w-100">Generate</button>
-      </div>
+      <!-- Input for image prompt -->
+      <input type="text" class="form-control" id="imagePrompt" placeholder="Describe your image..." required>
+      <!-- Generate Button -->
+      <button id="generateImage" class="btn btn-purple w-100 mt-2">Generate</button>
     </div>
 
+    <!-- Image placeholder -->
     <div id="generatedImageContainer" class="text-center mb-3">
       <div class="placeholder-img"
         style="width: 100%; height: 200px; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; color: #888;">
@@ -51,7 +46,7 @@
 
     <div class="mb-3 d-flex flex-column">
       <div class="mb-3">
-        <button type="submit" class="btn btn-purple w-100">Add Image</button>
+        <button id="addImage" type="submit" class="btn btn-purple w-100">Add Image</button>
       </div>
     </div>
   </div>
@@ -68,9 +63,11 @@
   let canvasRect = canvas.getBoundingClientRect();
 
   window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth - 450;
+    canvas.height = window.innerHeight - 100;
     canvasRect = canvas.getBoundingClientRect();
+    drawCanvas(); // Redraw content after resizing
   });
-
   const drawings = [];
   const memos = [];
   let drawing = false;
@@ -80,17 +77,26 @@
   let offsetX = 0;
   let offsetY = 0;
 
+  // Clamp the coordinates to canvas boundaries in `getCanvasCoordinates`
   function getCanvasCoordinates(e) {
     const scaleX = canvas.width / canvasRect.width;
     const scaleY = canvas.height / canvasRect.height;
+    const x = (e.clientX - canvasRect.left) * scaleX;
+    const y = (e.clientY - canvasRect.top) * scaleY;
+
     return {
-      x: (e.clientX - canvasRect.left) * scaleX,
-      y: (e.clientY - canvasRect.top) * scaleY,
+      x: Math.min(Math.max(x, 0), canvas.width), // Clamp x to canvas boundaries
+      y: Math.min(Math.max(y, 0), canvas.height) // Clamp y to canvas boundaries
     };
   }
 
   function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Redraw all memos (text and images)
+    memos.forEach(drawMemo);
+
+    // Redraw all drawings
     drawings.forEach(path => {
       ctx.beginPath();
       ctx.strokeStyle = path.color;
@@ -99,34 +105,33 @@
       path.points.forEach(point => ctx.lineTo(point.x, point.y));
       ctx.stroke();
     });
+
+    // Redraw all memos (text and images)
     memos.forEach(drawMemo);
   }
 
-  function drawMemo(memo) {
-    // Draw memo background
-    ctx.fillStyle = "purple";
-    ctx.fillRect(memo.x, memo.y, memo.width, memo.height);
-    // Draw memo text
-    ctx.fillStyle = "white";
-    ctx.font = `${memo.fontSize}px Arial`;
-    ctx.fillText(memo.text, memo.x + 10, memo.y + memo.fontSize + 5, memo.width - 20);
-    // Draw resize handle
-    ctx.fillStyle = "orange";
-    ctx.fillRect(memo.x + memo.width - 10, memo.y + memo.height - 10, 10, 10);
+  function eraseDrawing(x, y) {
+    const eraseRadius = 15; // Increased radius for better erasing
+
+    drawings.forEach((path, pathIndex) => {
+      path.points.forEach((point, pointIndex) => {
+        if (pointIndex > 0) {
+          const prevPoint = path.points[pointIndex - 1];
+          if (isPointNearLine(x, y, prevPoint, point, eraseRadius)) {
+            path.points.splice(pointIndex, 1); // Remove the point
+          }
+        }
+      });
+
+      // Remove path if it has no points left
+      if (path.points.length < 2) {
+        drawings.splice(pathIndex, 1);
+      }
+    });
+
+    drawCanvas(); // Redraw after erasing
   }
 
-  function eraseDrawing(x, y) {
-    const eraseRadius = 10;
-    drawings.forEach(path => {
-      path.points = path.points.filter(point => {
-        const dx = point.x - x;
-        const dy = point.y - y;
-        return Math.sqrt(dx * dx + dy * dy) > eraseRadius;
-      });
-    });
-    drawings.filter(path => path.points.length > 0);
-    drawCanvas();
-  }
 
   canvas.addEventListener("mousedown", (e) => {
     const { x, y } = getCanvasCoordinates(e);
@@ -136,7 +141,7 @@
       drawings.push({ color: "purple", size: 2, points: [{ x, y }] });
     } else if (tool === "eraser") {
       erasing = true;
-      eraseDrawing(x, y);
+      eraseDrawing(x, y); // Start erasing immediately
     } else if (tool === "text") {
       const text = prompt("Enter your text:");
       if (text) {
@@ -161,22 +166,23 @@
     }
   });
 
+
   canvas.addEventListener("mousemove", (e) => {
     const { x, y } = getCanvasCoordinates(e);
 
-    if (drawing && tool === "pen") {
+    if (tool === "pen" && drawing) {
       const currentPath = drawings[drawings.length - 1];
       currentPath.points.push({ x, y });
       drawCanvas();
-    } else if (erasing && tool === "eraser") {
-      eraseDrawing(x, y);
+    } else if (tool === "eraser" && erasing) {
+      eraseDrawing(x, y); // Continuously erase as the mouse moves
     } else if (tool === "cursor" && selectedMemo) {
       if (resizingMemo) {
         selectedMemo.width = Math.max(50, x - selectedMemo.x);
         selectedMemo.height = Math.max(30, y - selectedMemo.y);
       } else {
-        selectedMemo.x = x - offsetX;
-        selectedMemo.y = y - offsetY;
+        selectedMemo.x = Math.min(canvas.width - selectedMemo.width, Math.max(0, x - offsetX));
+        selectedMemo.y = Math.min(canvas.height - selectedMemo.height, Math.max(0, y - offsetY));
       }
       drawCanvas();
     }
@@ -184,19 +190,142 @@
 
   canvas.addEventListener("mouseup", () => {
     drawing = false;
-    erasing = false;
+    erasing = false; // Stop erasing when the mouse is released
     selectedMemo = null;
     resizingMemo = false;
   });
 
+  // Ensure `drawCanvas` handles all elements correctly
+  function drawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    // Redraw all memos (images and text) first
+    memos.forEach(drawMemo);
+
+    // Redraw all drawings (lines) after memos
+    drawings.forEach(path => {
+      ctx.beginPath();
+      ctx.strokeStyle = path.color;
+      ctx.lineWidth = path.size;
+      ctx.moveTo(path.points[0].x, path.points[0].y);
+      path.points.forEach(point => ctx.lineTo(point.x, point.y));
+      ctx.stroke();
+    });
+  }
+
+  // Add event listener for tool selection
   document.getElementById("toolbarSection").addEventListener("click", (e) => {
     const clickedTool = e.target.closest(".tool");
     if (clickedTool) {
+      // Remove "active" class from all tools
       toolIcons.forEach(icon => icon.classList.remove("active"));
+
+      // Add "active" class to the selected tool
       clickedTool.classList.add("active");
+
+      // Update the tool variable
       tool = clickedTool.id.replace("Tool", "").toLowerCase();
+      console.log(`Selected tool: ${tool}`);
+
+      // Reset erasing state
+      if (tool !== "eraser") {
+        erasing = false; // Stop erasing when another tool is selected
+      }
     }
   });
+
+  document.getElementById("generateImage").addEventListener("click", async () => {
+    const prompt = document.getElementById("imagePrompt").value;
+    const container = document.getElementById("generatedImageContainer");
+
+    if (!prompt || prompt.trim() === "") {
+      container.innerHTML = `<div style="color: red;">Prompt cannot be empty.</div>`;
+      return;
+    }
+
+    // Display loading state
+    container.innerHTML = `<div style="color: #888;">Generating image...</div>`;
+
+    try {
+      const response = await fetch("/generate_image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        container.innerHTML = `<img src="${data.image_url}" alt="Generated Image" style="width: 200px; height: 200px;">`;
+      } else {
+        container.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
+      }
+    } catch (error) {
+      container.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+    }
+  });
+
+  document.getElementById("addImage").addEventListener("click", () => {
+    const imgElement = document.querySelector("#generatedImageContainer img");
+    if (!imgElement) {
+      alert("No image to add!");
+      return;
+    }
+
+    // Add the image onto the canvas
+    const img = new Image();
+    img.src = imgElement.src;
+    img.onload = () => {
+      const memo = {
+        x: canvas.width / 4,
+        y: canvas.height / 4,
+        width: img.width / 2,
+        height: img.height / 2,
+        image: img,
+      };
+      memos.push(memo); // Add image to memos array
+      drawCanvas(); // Redraw the canvas
+    };
+  });
+
+
+  function drawMemo(memo) {
+    if (memo.image) {
+      // Draw the image
+      ctx.drawImage(memo.image, memo.x, memo.y, memo.width, memo.height);
+      ctx.fillStyle = "orange";
+      ctx.fillRect(memo.x + memo.width - 10, memo.y + memo.height - 10, 10, 10);
+    } else {
+      // Draw text memo (existing logic)
+      ctx.fillStyle = "purple";
+      ctx.fillRect(memo.x, memo.y, memo.width, memo.height);
+      ctx.fillStyle = "white";
+      ctx.font = `${memo.fontSize}px Arial`;
+      ctx.fillText(memo.text, memo.x + 10, memo.y + memo.fontSize + 5, memo.width - 20);
+      ctx.fillStyle = "orange";
+      ctx.fillRect(memo.x + memo.width - 10, memo.y + memo.height - 10, 10, 10);
+    }
+  }
+
+  // Helper function to check if a point is within a certain distance from a line
+  function isPointNearLine(x, y, lineStart, lineEnd, radius) {
+    const dx = lineEnd.x - lineStart.x;
+    const dy = lineEnd.y - lineStart.y;
+    const lineLength = Math.sqrt(dx * dx + dy * dy);
+    const lineUnitVector = { x: dx / lineLength, y: dy / lineLength };
+    const pointToStart = { x: x - lineStart.x, y: y - lineStart.y };
+    const projectionLength = pointToStart.x * lineUnitVector.x + pointToStart.y * lineUnitVector.y;
+
+    const closestPoint = {
+      x: lineStart.x + projectionLength * lineUnitVector.x,
+      y: lineStart.y + projectionLength * lineUnitVector.y
+    };
+
+    const distance = Math.sqrt((closestPoint.x - x) ** 2 + (closestPoint.y - y) ** 2);
+    return distance < radius;
+  }
+
+
+
 </script>
 
 {% endblock %}
