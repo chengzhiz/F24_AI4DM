@@ -29,7 +29,7 @@
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
             <a class="nav-link {% if active=='artboard' %}active{% endif %}"
-              href="{{ url_for('artboard') }}">Artboard</a>
+              href="{{ url_for('projects', project_id=some_project_id if some_project_id is defined else 0) }}">Projects</a>
           </li>
           <li class="nav-item">
             <a class="nav-link {% if active=='about' %}active{% endif %}" href="{{ url_for('about') }}">About</a>

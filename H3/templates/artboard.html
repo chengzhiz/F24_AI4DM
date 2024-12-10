@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+
 <div id="artboardContainer" class="row g-0">
   <!-- Toolbox Section -->
   <div id="toolbarSection">
@@ -29,6 +30,8 @@
   <!-- Image Generation Section -->
   <div id="imageGenerationSection" class="col-3">
     <h5>Image Generation</h5>
+
+    <div class="mb-1">Please describe what you would like to generate</div>
     <div class="mb-3 d-flex flex-column">
       <!-- Input for image prompt -->
       <input type="text" class="form-control" id="imagePrompt" placeholder="Describe your image..." required>
