@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
-from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
+import json
 import os
 from datetime import datetime
-from model import generate_image, db, User, Project, ProjectUser  # Import your generate_image function
+from model import generate_image, db, Artboard, User, Project  # Import your generate_image function
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate 
@@ -92,42 +92,74 @@ def login():
 def projects():
     if "user_id" not in session:
         flash("You need to log in first.")
-        return redirect("/")
+        return redirect("/login")  # Make sure you redirect to the login page
 
     projects = Project.query.all()
     return render_template("projects.html", projects=projects)
 
 @app.route("/join_project", methods=["POST"])
 def join_project():
-    if "user_id" not in session:
-        flash("You need to log in first.")
-        return redirect("/")
+    try:
+        if "user_id" not in session:
+            flash("You need to log in first.")
+            return redirect("/")
 
-    project_id = request.form.get("project_id")
-    password = request.form.get("password")
+        project_id = request.form.get("project_id")
+        password = request.form.get("password")
 
-    if not project_id or not password:
-        flash("Project ID and password are required.")
-        return redirect("/projects")
+        if not project_id or not password:
+            flash("Project ID and password are required.")
+            return redirect("/projects")
 
-    project = Project.query.filter_by(id=project_id).first()
+        project = Project.query.filter_by(id=project_id).first()
 
-    if project:
-        if project.password == password:
-            flash(f"Joined project: {project.name}")
-            return redirect(url_for("artboard", project_id=project.id))
+        if project:
+            if project.password == password:
+                flash(f"Joined project: {project.name}")
+                return redirect(url_for("artboard", project_id=project.id))
+            else:
+                flash("Invalid project password.")
         else:
-            flash("Invalid project password.")
-    else:
-        flash("Project not found.")
+            flash("Project not found.")
 
-    return redirect("/projects")
-
+        return redirect("/projects")
+    except Exception as e:
+        print(f"Error in join_project: {e}")
+        flash("An error occurred while joining the project.")
+        return redirect("/projects")
 
 @app.route("/artboard/<int:project_id>")
 def artboard(project_id):
-    artboard = Artboard.query.filter_by(project_id=project_id).first()
-    return render_template("artboard.html", project_id=project_id, content=artboard.content if artboard else "")
+    try:
+        # Query the database for the specific artboard based on the project ID
+        artboard = Artboard.query.filter_by(project_id=project_id).first()
+
+        if not artboard:
+            return render_template("artboard.html", project_id=project_id, content=None)
+
+        content = artboard.content
+        print(f"Retrieved content for project {project_id}: {content}")  # Debugging
+
+        if not content:
+            flash("No content available for this artboard.")
+            return render_template("artboard.html", project_id=project_id, content=None)
+
+        try:
+            # Try parsing the content as JSON
+            parsed_content = json.loads(content)
+        except json.JSONDecodeError:
+            # If parsing fails, log the error and return the raw content
+            print(f"Error decoding JSON content: {content}")
+            flash("Error loading content: Invalid format.")
+            return render_template("artboard.html", project_id=project_id, content=None)
+
+        return render_template("artboard.html", project_id=project_id, content=parsed_content)
+
+    except Exception as e:
+        print(f"Error in artboard route: {e}")
+        flash("An error occurred while loading the artboard.")
+        return redirect("/projects")
+
 
 
 @app.route("/logout")
@@ -154,26 +186,63 @@ def reset_projects():
     flash("Projects have been reset successfully.")
     return redirect("/projects")
 
-class Artboard(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
-    content = db.Column(db.Text)  # Store artboard content as text
-
-# In your app.py, when saving artboard data:
+@app.route("/save_artboard", methods=["POST"])
 @app.route("/save_artboard/<int:project_id>", methods=["POST"])
-def save_artboard(project_id):
-    content = request.form.get("content")  # Assuming the data is from a form
-    artboard = Artboard.query.filter_by(project_id=project_id).first()
-    if not artboard:
-        artboard = Artboard(project_id=project_id, content=content)
-        db.session.add(artboard)
-    else:
-        artboard.content = content
-    db.session.commit()
-    flash("Artboard saved successfully.")
-    return redirect(url_for("artboard", project_id=project_id))
+def save_artboard(project_id=None):
+    try:
+        if request.is_json:
+            content = request.json.get("content")
+        else:
+            content = request.form.get("content")
 
+        print("Received content:", content)  # Debugging: Check the incoming content
+
+        if not content:
+            print("Error: No content provided.")
+            return jsonify({"error": "Content is required"}), 400
+
+        # If content is a dictionary or any other non-string type, convert it to JSON
+        if isinstance(content, dict):
+            content = json.dumps(content)
+
+        # If project_id is provided in the URL, update the specific artboard
+        if project_id:
+            artboard = Artboard.query.filter_by(project_id=project_id).first()
+            if not artboard:
+                artboard = Artboard(project_id=project_id, content=content)
+                db.session.add(artboard)
+            else:
+                print(f"Updating existing artboard with content: {content}")  # Debugging
+                artboard.content = content
+        else:
+            artboard = Artboard(content=content)
+            db.session.add(artboard)
+
+        db.session.commit()
+
+        print(f"Artboard saved with ID: {artboard.id}, content: {artboard.content}")  # Debugging
+
+        if request.is_json:
+            return jsonify({"message": "Artboard saved successfully", "artboard_id": artboard.id}), 200
+        else:
+            flash("Artboard saved successfully.")
+            return redirect(url_for("artboard", project_id=project_id))
+
+    except Exception as e:
+        print(f"Error saving artboard: {e}")
+        return jsonify({"error": "Failed to save artboard"}), 500
+
+
+@app.route('/get_artboard/<projectId>', methods=['GET'])
+def get_artboard(projectId):
+    artboard_data = Artboard.query.filter_by(project_id=projectId).first()
+    if artboard_data:
+        return jsonify(success=True, data=artboard_data.content)
+    else:
+        return jsonify(success=False, error="Artboard not found")
+
+    
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # Create database tables if they don't exist
+       print(db.metadata.tables.keys())
     app.run(debug=True)

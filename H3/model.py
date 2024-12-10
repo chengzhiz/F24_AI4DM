@@ -1,23 +1,19 @@
 from huggingface_hub import InferenceClient
 from PIL import Image
 import os
-from flask_sqlalchemy import SQLAlchemy
+
+from sqlalchemy import Text
+
 from datetime import datetime
+
+from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
+from sqlalchemy.dialects.postgresql import JSON  # Use for PostgreSQL
 
 # Initialize Hugging Face client
 client = InferenceClient(model="black-forest-labs/FLUX.1-dev", token="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")
 
 def generate_image(prompt):
-    """
-    Generates an image based on the given prompt using the Hugging Face API.
-
-    Args:
-        prompt (str): The prompt for image generation.
-
-    Returns:
-        str: Path to the saved image.
-    """
     if not prompt:
         raise ValueError("Prompt cannot be empty.")
 
@@ -52,3 +48,10 @@ class Project(db.Model):
     name = db.Column(db.String(120), nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
+class Artboard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    content = db.Column(Text)  # Use Text to store large text (JSON string)
+
+    def __repr__(self):
+        return f'<Artboard {self.id}>'

@@ -52,6 +52,7 @@
         <button id="addImage" type="submit" class="btn btn-purple w-100">Add Image</button>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -59,6 +60,8 @@
   const canvas = document.getElementById("artboard");
   const ctx = canvas.getContext("2d");
   const toolIcons = document.querySelectorAll(".tool");
+  const projectId = {{ project_id }}; // Pass the project_id from Flask to JavaScript
+
   let tool = "pen"; // Default tool
 
   canvas.width = window.innerWidth - 450;
@@ -112,6 +115,8 @@
     // Redraw all memos (text and images)
     memos.forEach(drawMemo);
   }
+
+  drawCanvas();
 
   function eraseDrawing(x, y) {
     const eraseRadius = 15; // Increased radius for better erasing
@@ -198,14 +203,14 @@
     resizingMemo = false;
   });
 
-  // Ensure `drawCanvas` handles all elements correctly
+  // Call saveArtboardState whenever the canvas is updated
   function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
 
-    // Redraw all memos (images and text) first
+    // Redraw all memos (images and text)
     memos.forEach(drawMemo);
 
-    // Redraw all drawings (lines) after memos
+    // Redraw all drawings (lines)
     drawings.forEach(path => {
       ctx.beginPath();
       ctx.strokeStyle = path.color;
@@ -214,6 +219,7 @@
       path.points.forEach(point => ctx.lineTo(point.x, point.y));
       ctx.stroke();
     });
+    saveArtboardState(); // Save state after drawing
   }
 
   // Add event listener for tool selection
@@ -327,6 +333,83 @@
     return distance < radius;
   }
 
+  function saveArtboardState() {
+    const artboardState = {
+      drawings: drawings,
+      memos: memos
+    };
+
+    console.log("Saving artboard state:", artboardState); // Debug
+
+    fetch(`/save_artboard/${projectId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: artboardState })
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log('Artboard saved successfully!');
+        } else {
+          console.error('Failed to save artboard state.');
+        }
+      })
+      .catch(error => {
+        console.error('Error saving artboard state:', error);
+      });
+  }
+
+  async function loadArtboard(projectId) {
+    try {
+      const response = await fetch(`/get_artboard/${projectId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("Loaded artboard data:", result.data); // Debug
+        renderArtboard(result.data);
+      } else {
+        console.error("Error loading artboard:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching artboard:", error);
+    }
+  }
+
+
+  function renderArtboard(data) {
+    if (data.drawings) {
+      console.log("Drawings to render:", data.drawings);
+      data.drawings.forEach(renderDrawing);
+    }
+
+    if (data.memos) {
+      console.log("Memos to render:", data.memos);
+      data.memos.forEach(memo => {
+        memos.push(memo); // Add memo to memos array
+      });
+    }
+
+    drawCanvas(); // Redraw everything
+  }
+
+
+  // Example: Render a drawing
+  function renderDrawing(drawing) {
+    const ctx = canvas.getContext("2d"); // Get canvas context
+    ctx.strokeStyle = drawing.color;
+    ctx.lineWidth = drawing.size;
+
+    ctx.beginPath();
+    for (let i = 0; i < drawing.points.length - 1; i++) {
+      const p1 = drawing.points[i];
+      const p2 = drawing.points[i + 1];
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+    }
+    ctx.stroke();
+  }
+
+  // Load the artboard state when the page is loaded
+  window.addEventListener('load', loadArtboardState);
 
 
 </script>
