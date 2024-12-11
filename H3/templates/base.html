@@ -40,9 +40,31 @@
   </nav>
 
   <!-- Main Content -->
+
+  {% block content %}
+  {% endblock %}
   <main class="container-fluid">
-    {% block content %}
-    {% endblock %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div id="flash-message" style="background-color: #f0ad4e; padding: 10px; margin: 10px 0; color: white;">
+      {{ messages[0] }}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        // Check if the flash message exists
+        if ($('#flash-message').length) {
+          // Hide the flash message after 3 seconds
+          setTimeout(function () {
+            $('#flash-message').fadeOut('slow');
+          }, 3000);  // 3000 milliseconds = 3 seconds
+        }
+      });
+    </script>
   </main>
 
 

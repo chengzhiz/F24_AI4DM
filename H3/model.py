@@ -42,7 +42,6 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False)  # 'client' or 'designer'
     projects = db.relationship('ProjectUser', backref='user', lazy=True)
 
-
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)

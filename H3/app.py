@@ -218,9 +218,14 @@ def save_artboard(project_id=None):
             artboard = Artboard(content=content)
             db.session.add(artboard)
 
+        # print("--- SAVING")
         db.session.commit()
 
         print(f"Artboard saved with ID: {artboard.id}, content: {artboard.content}")  # Debugging
+
+        aa = Artboard.query.filter_by(project_id=project_id).first()
+        print("!!!", aa.content)
+        print()
 
         if request.is_json:
             return jsonify({"message": "Artboard saved successfully", "artboard_id": artboard.id}), 200

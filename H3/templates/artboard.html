@@ -74,8 +74,12 @@
     canvasRect = canvas.getBoundingClientRect();
     drawCanvas(); // Redraw content after resizing
   });
-  const drawings = [];
-  const memos = [];
+
+  const cc = JSON.parse('{{ content | tojson | safe }}');
+  console.log(cc)
+
+  const drawings = cc["drawings"];
+  const memos = cc["memos"];
   let drawing = false;
   let erasing = false;
   let selectedMemo = null;
