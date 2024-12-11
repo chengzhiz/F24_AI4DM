@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import json
 import os
 from datetime import datetime
-from model import generate_image, db, Artboard, User, Project  # Import your generate_image function
+from model import db, Artboard, User, Project  # Import your generate_image function
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate 
@@ -202,9 +202,9 @@ def reset_projects():
 
     # Add new projects with real names
     new_projects = [
-        Project(name="AI Research Hub", password="securepass1"),
-        Project(name="Creative Design Studio", password="securepass2"),
-        Project(name="Future Tech Lab", password="securepass3"),
+        Project(name="Atlanta Single Family House", password="666666"),
+        Project(name="Condo Near Airport", password="666666"),
+        Project(name="City Public Library", password="666666"),
     ]
     db.session.add_all(new_projects)
     db.session.commit()
