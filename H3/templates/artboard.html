@@ -76,10 +76,15 @@
   });
 
   const cc = JSON.parse('{{ content | tojson | safe }}');
-  console.log(cc)
+  const userRole = {{ role }}
+  console.log(userRole)
 
   const drawings = cc["drawings"];
   const memos = cc["memos"];
+
+  //const drawings = [];
+  //const memos = [];
+
   let drawing = false;
   let erasing = false;
   let selectedMemo = null;
@@ -150,14 +155,22 @@
 
     if (tool === "pen") {
       drawing = true;
-      drawings.push({ color: "purple", size: 2, points: [{ x, y }] });
+      if (userRole == 1) {
+        drawings.push({ color: "purple", size: 2, points: [{ x, y }] });
+      } else {
+        drawings.push({ color: "orange", size: 2, points: [{ x, y }] });
+      }
     } else if (tool === "eraser") {
       erasing = true;
       eraseDrawing(x, y); // Start erasing immediately
     } else if (tool === "text") {
       const text = prompt("Enter your text:");
       if (text) {
-        memos.push({ x, y, width: 150, height: 50, text, fontSize: 16 });
+        if (userRole == 1) {
+          memos.push({ x, y, width: 150, height: 50, text, fontSize: 16 });
+        } else {
+          memos.push({ x, y, width: 150, height: 50, text, fontSize: 16 });
+        }
         drawCanvas();
       }
     } else if (tool === "cursor") {

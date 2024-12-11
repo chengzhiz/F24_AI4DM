@@ -1,5 +1,4 @@
-from huggingface_hub import InferenceClient
-from PIL import Image
+
 import os
 
 from sqlalchemy import Text
@@ -10,22 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 from sqlalchemy.dialects.postgresql import JSON  # Use for PostgreSQL
 
-# Initialize Hugging Face client
-client = InferenceClient(model="black-forest-labs/FLUX.1-dev", token="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")
 
-def generate_image(prompt):
-    if not prompt:
-        raise ValueError("Prompt cannot be empty.")
-
-    try:
-        image = client.text_to_image(prompt)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        os.makedirs("static/generated_imgs", exist_ok=True)
-        image_path = f"static/generated_imgs/image_{timestamp}.png"
-        image.save(image_path)
-        return image_path
-    except Exception as e:
-        raise RuntimeError(f"Image generation failed: {str(e)}")
 
 
 class ProjectUser(db.Model):

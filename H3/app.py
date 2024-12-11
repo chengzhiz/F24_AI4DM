@@ -8,6 +8,9 @@ from model import generate_image, db, Artboard, User, Project  # Import your gen
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate 
 
+from huggingface_hub import InferenceClient
+from PIL import Image
+
 load_dotenv()
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
@@ -24,6 +27,24 @@ migrate = Migrate(app, db)  # Initialize migration with app and db
 
 # Initialize the app with the db instance
 db.init_app(app)
+
+
+# Initialize Hugging Face client
+client = InferenceClient(model="stabilityai/stable-diffusion-3.5-large", token="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")
+
+def generate_image(prompt):
+    if not prompt:
+        raise ValueError("Prompt cannot be empty.")
+
+    try:
+        image = client.text_to_image(prompt)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        os.makedirs("static/generated_imgs", exist_ok=True)
+        image_path = f"static/generated_imgs/image_{timestamp}.png"
+        image.save(image_path)
+        return image_path
+    except Exception as e:
+        raise RuntimeError(f"Image generation failed: {str(e)}")
 
 
 @app.route('/')
@@ -130,6 +151,11 @@ def join_project():
 
 @app.route("/artboard/<int:project_id>")
 def artboard(project_id):
+    uu = User.query.filter_by(id=session["user_id"]).first()
+    if (uu.role == "client"):
+        role = 1
+    else:
+        role = 0
     try:
         # Query the database for the specific artboard based on the project ID
         artboard = Artboard.query.filter_by(project_id=project_id).first()
@@ -153,7 +179,7 @@ def artboard(project_id):
             flash("Error loading content: Invalid format.")
             return render_template("artboard.html", project_id=project_id, content=None)
 
-        return render_template("artboard.html", project_id=project_id, content=parsed_content)
+        return render_template("artboard.html", project_id=project_id, content=parsed_content, role=role)
 
     except Exception as e:
         print(f"Error in artboard route: {e}")
@@ -218,14 +244,9 @@ def save_artboard(project_id=None):
             artboard = Artboard(content=content)
             db.session.add(artboard)
 
-        # print("--- SAVING")
         db.session.commit()
 
         print(f"Artboard saved with ID: {artboard.id}, content: {artboard.content}")  # Debugging
-
-        aa = Artboard.query.filter_by(project_id=project_id).first()
-        print("!!!", aa.content)
-        print()
 
         if request.is_json:
             return jsonify({"message": "Artboard saved successfully", "artboard_id": artboard.id}), 200
